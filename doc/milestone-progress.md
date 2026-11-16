@@ -39,7 +39,7 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 | # | Task | Status |
 |---|---|---|
 | 1 | Scaffold (pyproject, uv lock, .gitignore, markers, ruff + pyright) | DONE (commit "M1 task 1: scaffold") |
-| 2 | Model (pydantic, UUIDs, extensions) | TODO |
+| 2 | Model (pydantic, UUIDs, extensions) | DONE (commit "M1 task 2: core model") |
 | 3 | Validation | TODO |
 | 4 | Analytic inertia + checks | TODO |
 | 5 | Synthetic fixture generator | TODO |
@@ -69,3 +69,4 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 - 2026-11-16: started task 1 (scaffold). Paused: `cadquery-ocp` pins vtk 9.6.2; asked whether to switch to `cadquery-ocp-novtk`. Scaffold left uncommitted, task 1 IN PROGRESS.
 - 2026-11-16: still waiting for an answer (cadquery-ocp-novtk question); no work done.
 - 2026-11-16: answer applied (switch to `cadquery-ocp-novtk`); task 1 (scaffold) done: uv project, src layout, ruff banned-api, pyright strict on core/exporters, markers with auto-skip, `cadquery-ocp-stubs` for OCP types. ruff, format, pyright and pytest (7 passed, 1 skipped) pass.
+- 2026-11-16: task 2 (model) done: `rigidforge.core` geometry, extensions and model (links, joints, parts, loop constraints, UUID refs, mass sources, overrides), with round-trip and extension tests. All checks pass (24 passed, 1 skipped).
