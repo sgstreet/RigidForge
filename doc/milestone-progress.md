@@ -41,7 +41,7 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 | 1 | Scaffold (pyproject, uv lock, .gitignore, markers, ruff + pyright) | DONE (commit "M1 task 1: scaffold") |
 | 2 | Model (pydantic, UUIDs, extensions) | DONE (commit "M1 task 2: core model") |
 | 3 | Validation | DONE (commit "M1 task 3: validation") |
-| 4 | Analytic inertia + checks | TODO |
+| 4 | Analytic inertia + checks | DONE (commit "M1 task 4: analytic inertia and checks") |
 | 5 | Synthetic fixture generator | TODO |
 | 6 | STEP importer | TODO |
 | 7 | B-Rep mass properties | TODO |
@@ -71,3 +71,4 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 - 2026-11-16: answer applied (switch to `cadquery-ocp-novtk`); task 1 (scaffold) done: uv project, src layout, ruff banned-api, pyright strict on core/exporters, markers with auto-skip, `cadquery-ocp-stubs` for OCP types. ruff, format, pyright and pytest (7 passed, 1 skipped) pass.
 - 2026-11-16: task 2 (model) done: `rigidforge.core` geometry, extensions and model (links, joints, parts, loop constraints, UUID refs, mass sources, overrides), with round-trip and extension tests. All checks pass (24 passed, 1 skipped).
 - 2026-11-16: task 3 (validation) done: `rigidforge.core.validation` with stable issue codes (tree, names, IDs, references, limits, axes, poses, mass inputs, loop constraints); 35 table-driven error cases, 3 warning cases and a hypothesis random-tree test. Tensor SPD/triangle checks deferred to task 4. All checks pass (66 passed, 1 skipped).
+- 2026-11-16: task 4 (analytic inertia) done: `rigidforge.core.inertia.check_inertia` (mass, finite, symmetric, SPD, triangle inequality, extreme-ratio warning) wired into validation for inertial overrides; `rigidforge.physics.inertia` with box/cylinder/sphere oracles (match OCCT GProp to 1e-6), rotation, parallel-axis, frame change and combine, plus hypothesis tests. All checks pass (101 passed, 1 skipped).
