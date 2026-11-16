@@ -108,6 +108,18 @@ class StepImport:
     def product_of(self, leaf: StepLeaf) -> StepProduct:
         return self.products[leaf.product]
 
+    def leaf_at(self, path: tuple[str, ...] | list[str]) -> StepLeaf:
+        """The leaf with this instance-name path (``PartSource.assembly_path``).
+
+        Raises ``KeyError`` if there is none. A part's frame is its product's frame, so the
+        product's shape gives the part's geometry in the part frame.
+        """
+        key = tuple(path)
+        for leaf in self.leaves:
+            if leaf.path == key:
+                return leaf
+        raise KeyError(key)
+
 
 def unit_metres(name: str) -> float | None:
     """Metres per unit for an OCCT/STEP length unit name, or ``None`` if unknown."""
