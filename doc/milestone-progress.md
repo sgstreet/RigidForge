@@ -44,7 +44,7 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 | 4 | Analytic inertia + checks | DONE (commit "M1 task 4: analytic inertia and checks") |
 | 5 | Synthetic fixture generator | DONE (commit "M1 task 5: synthetic STEP fixtures") |
 | 6 | STEP importer | DONE (commit "M1 task 6: STEP importer") |
-| 7 | B-Rep mass properties | TODO |
+| 7 | B-Rep mass properties | DONE (commit "M1 task 7: B-Rep mass properties") |
 | 8 | Mesh importer (STL, OBJ, DAE, 3MF) | TODO |
 | 9 | Persistence | TODO |
 | 10 | URDF exporter | TODO |
@@ -74,3 +74,4 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 - 2026-11-16: task 4 (analytic inertia) done: `rigidforge.core.inertia.check_inertia` (mass, finite, symmetric, SPD, triangle inequality, extreme-ratio warning) wired into validation for inertial overrides; `rigidforge.physics.inertia` with box/cylinder/sphere oracles (match OCCT GProp to 1e-6), rotation, parallel-axis, frame change and combine, plus hypothesis tests. All checks pass (101 passed, 1 skipped).
 - 2026-11-16: task 5 (synthetic fixtures) done: `rigidforge.testing.step_fixtures` builds XCAF assemblies from analytic primitives (names, colours, nested sub-assembly, a part instanced twice) and writes STEP in mm or m, with the expected placements, volumes and bboxes; read-back tests through `STEPCAFControl_Reader`. Finding: OCCT STEP output is not byte-reproducible (recorded in design doc section 6, item 7). All checks pass (115 passed, 1 skipped).
 - 2026-11-16: task 6 (STEP importer) done: `rigidforge.importers.step` (XCAF tree to shared products and placed leaves in metres, declared-unit and document-unit checks, `scale_to_si` override applied to the B-Rep, candidate parts) and `rigidforge.core.transforms`; tested on the synthetic fixtures (mm and m) and the hexapod coxa frame and XL330 assembly. All checks pass (149 passed, 1 skipped).
+- 2026-11-16: task 7 (B-Rep mass properties) done: `rigidforge.physics.brep` (adaptive GProp, Eps 1e-12, closed shells only; rejects surface models and reversed solids) and `rigidforge.physics.mass` (unit-density results, density and override paths with provenance, link merge, geometry cache key); `StepImport.leaf_at`. Finding: default GProp integration is 2e-6 to 1e-5 off on the hexapod frames, recorded in design doc section 7. Measured mass raises until task 17. All checks pass (177 passed, 1 skipped).
