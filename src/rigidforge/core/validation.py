@@ -16,9 +16,9 @@ Checks done here:
 * Poses are finite with unit quaternions.
 * Mass inputs (density, measured mass, override mass) are finite and positive, and import
   scale factors are finite and positive.
-
-Inertia tensor checks (symmetric positive definite, triangle inequality) need the mass
-properties code and are added with it (M1 task 4).
+* Inertial override tensors are finite, positive definite and satisfy the triangle
+  inequality (see :mod:`rigidforge.core.inertia`); an extreme principal-moment ratio is a
+  warning. Computed mass properties are checked with the same function by the physics code.
 """
 
 import math
@@ -28,6 +28,7 @@ from enum import StrEnum
 from uuid import UUID
 
 from rigidforge.core.geometry import Pose, Vec3
+from rigidforge.core.inertia import InertiaProblem, check_inertia
 from rigidforge.core.model import (
     Density,
     InertialOverride,
@@ -79,6 +80,10 @@ class IssueCode(StrEnum):
     BAD_MIRROR_NORMAL = "bad_mirror_normal"
     UNASSIGNED_PART = "unassigned_part"
     LOOP_SAME_LINK = "loop_same_link"
+    INERTIA_NOT_FINITE = "inertia_not_finite"
+    INERTIA_NOT_POSITIVE_DEFINITE = "inertia_not_positive_definite"
+    INERTIA_TRIANGLE_INEQUALITY = "inertia_triangle_inequality"
+    INERTIA_EXTREME_RATIO = "inertia_extreme_ratio"
 
 
 @dataclass(frozen=True, slots=True)
@@ -384,6 +389,32 @@ def _check_override(ov: InertialOverride, what: str, subject: UUID) -> Iterator[
     if not (math.isfinite(ov.mass) and ov.mass > 0.0):
         yield _err(IssueCode.NON_POSITIVE_MASS, f"{what} override mass must be > 0", subject)
     yield from _check_pose(Pose(xyz=ov.com, quat=ov.orientation), f"{what} override frame", subject)
+    for problem in check_inertia(1.0, ov.inertia):  # mass is checked above
+        match problem:
+            case InertiaProblem.NOT_FINITE:
+                yield _err(
+                    IssueCode.INERTIA_NOT_FINITE, f"{what} override inertia is not finite", subject
+                )
+            case InertiaProblem.NOT_POSITIVE_DEFINITE:
+                yield _err(
+                    IssueCode.INERTIA_NOT_POSITIVE_DEFINITE,
+                    f"{what} override inertia is not positive definite",
+                    subject,
+                )
+            case InertiaProblem.TRIANGLE_INEQUALITY:
+                yield _err(
+                    IssueCode.INERTIA_TRIANGLE_INEQUALITY,
+                    f"{what} override inertia violates the triangle inequality",
+                    subject,
+                )
+            case InertiaProblem.EXTREME_RATIO:
+                yield _warn(
+                    IssueCode.INERTIA_EXTREME_RATIO,
+                    f"{what} override principal moments differ by a very large ratio",
+                    subject,
+                )
+            case InertiaProblem.NON_POSITIVE_MASS | InertiaProblem.NOT_SYMMETRIC:
+                pass  # mass checked above; InertiaTensor is symmetric by construction
 
 
 def _check_mass_inputs(model: RobotModel) -> Iterator[Issue]:

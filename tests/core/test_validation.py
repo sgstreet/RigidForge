@@ -194,6 +194,25 @@ def _nan_part_override_com(m: RobotModel) -> None:
     )
 
 
+def _override(ixx: float, iyy: float, izz: float, ixy: float = 0.0) -> InertialOverride:
+    return InertialOverride(
+        mass=0.01, com=(0.0, 0.0, 0.0), inertia=InertiaTensor(ixx=ixx, iyy=iyy, izz=izz, ixy=ixy)
+    )
+
+
+def _nan_override_inertia(m: RobotModel) -> None:
+    m.links[1].inertial_override = _override(NAN, 1e-6, 1e-6)
+
+
+def _indefinite_override_inertia(m: RobotModel) -> None:
+    # Eigenvalues of [[1, 2], [2, 1]] are 3 and -1.
+    m.parts[1].inertial_override = _override(1e-6, 1e-6, 1e-6, ixy=2e-6)
+
+
+def _triangle_override_inertia(m: RobotModel) -> None:
+    m.links[2].inertial_override = _override(1e-6, 1e-6, 3e-6)
+
+
 def _zero_scale(m: RobotModel) -> None:
     m.parts[0].source = m.parts[0].source.model_copy(update={"scale_to_si": 0.0})
 
@@ -262,6 +281,17 @@ ERRORS: list[tuple[str, Mutation, IssueCode]] = [
     ("zero measured mass", _zero_measured_mass, IssueCode.NON_POSITIVE_MASS),
     ("zero override mass", _zero_override_mass, IssueCode.NON_POSITIVE_MASS),
     ("NaN override CoM", _nan_part_override_com, IssueCode.POSE_NOT_FINITE),
+    ("NaN override inertia", _nan_override_inertia, IssueCode.INERTIA_NOT_FINITE),
+    (
+        "indefinite override inertia",
+        _indefinite_override_inertia,
+        IssueCode.INERTIA_NOT_POSITIVE_DEFINITE,
+    ),
+    (
+        "override breaks triangle inequality",
+        _triangle_override_inertia,
+        IssueCode.INERTIA_TRIANGLE_INEQUALITY,
+    ),
     ("zero scale", _zero_scale, IssueCode.BAD_SCALE),
     ("degenerate mirror", _bad_mirror, IssueCode.BAD_MIRROR_NORMAL),
     ("loop on one link", _loop_same_link, IssueCode.LOOP_SAME_LINK),
@@ -293,10 +323,16 @@ def _unassigned_part(m: RobotModel) -> None:
     m.parts[0].link = None
 
 
+def _extreme_override_ratio(m: RobotModel) -> None:
+    # A thin rod: valid (triangle holds) but the moments differ by 1e6.
+    m.links[1].inertial_override = _override(1e-6, 1e-6, 1e-12)
+
+
 WARNINGS: list[tuple[str, Mutation, IssueCode]] = [
     ("fixed joint with limits", _fixed_with_limits, IssueCode.UNUSED_LIMITS),
     ("continuous joint with limits", _continuous_with_limits, IssueCode.UNUSED_LIMITS),
     ("unassigned part", _unassigned_part, IssueCode.UNASSIGNED_PART),
+    ("extreme override inertia ratio", _extreme_override_ratio, IssueCode.INERTIA_EXTREME_RATIO),
 ]
 
 
