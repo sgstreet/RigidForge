@@ -1,0 +1,74 @@
+[project]
+name = "rigidforge"
+version = "0.1.0"
+description = "Build robot models from CAD (STEP) and meshes and export URDF, MJCF, SDF and USD."
+readme = "README.md"
+license = "MPL-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.12,<3.15"
+# Pins follow design doc sections 4 and 5. Re-check PyPI before bumping.
+# GUI (PySide6, pyvista, pyvistaqt) and USD (usd-core) are added in later milestones.
+dependencies = [
+    "numpy>=2.5,<3",
+    "scipy>=1.18,<2",
+    "pydantic>=2.14,<3",
+    "cadquery-ocp-novtk>=8.0.1,<8.1",
+    "trimesh>=5.2,<6",
+    "lxml>=6.1,<7",
+    "mujoco>=4.0.1,<5",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.17.5",
+    "pyright>=1.1.414",
+    "pytest>=9.2",
+    "hypothesis>=6.170",
+    "yourdfpy>=0.0.60",
+    "cadquery-ocp-stubs>=8.0.1,<8.1",
+]
+
+[build-system]
+requires = ["uv_build>=0.13,<0.14"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "TID"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+# Headless rule: core/, importers/, physics/ and exporters/ never import Qt, pyvista or VTK.
+# When ui/ and viewport/ are added (M2), give each a nested ruff.toml that extends this file
+# and keeps only the PyQt bans. tests/test_layering.py is the backstop.
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"PySide6".msg = "Headless packages must not import PySide6; only ui/ and viewport/ may."
+"pyvista".msg = "Headless packages must not import pyvista; only ui/ and viewport/ may."
+"pyvistaqt".msg = "Headless packages must not import pyvistaqt; only ui/ and viewport/ may."
+"vtk".msg = "Headless packages must not import vtk; only ui/ and viewport/ may."
+"vtkmodules".msg = "Headless packages must not import vtk; only ui/ and viewport/ may."
+"PyQt5".msg = "PySide6 only: never use PyQt (use Signal/Slot, not pyqtSignal)."
+"PyQt6".msg = "PySide6 only: never use PyQt (use Signal/Slot, not pyqtSignal)."
+
+[tool.pyright]
+include = ["src", "tests"]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+# Strict where stubs are good; basic elsewhere (OCP, VTK and pyvista have weak stubs).
+strict = ["src/rigidforge/core", "src/rigidforge/exporters"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers", "--strict-config"]
+markers = [
+    "gui: needs a display or Qt (PySide6); run headless with QT_QPA_PLATFORM=offscreen",
+    "gazebo: needs the gz CLI (gz sdf -k)",
+    "isaac: needs Isaac Sim",
+]

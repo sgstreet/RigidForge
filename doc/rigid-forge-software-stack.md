@@ -34,13 +34,13 @@ The architecture holds up: Python + PySide6 + PyVista/VTK viewport, OpenCascade 
 |---|---|
 | PySide6 6.12.0 | ≥3.10, <3.16 |
 | numpy 2.5.4 / scipy 1.18.1 | ≥3.12 |
-| cadquery-ocp 8.0.1.1.0 | ≥3.11, <3.15 |
+| cadquery-ocp-novtk 8.0.1.1.0 | ≥3.11, <3.15 |
 | usd-core 26.11 | ≥3.11, <3.15 |
 | mujoco 4.0.1 | ≥3.11 |
 | vtk 9.7.2 | wheels cp310–cp315 |
 | pyvista 0.49.2, pyvistaqt 0.13.2, trimesh 5.2.1, pydantic 2.14.3, coacd 1.0.14 | ≥3.9–3.10 |
 
-Intersection: **3.12 – 3.14**. Recommend developing on 3.13 and testing 3.12 and 3.14 in CI. Linux x86_64/aarch64, macOS and Windows wheels exist for cadquery-ocp, usd-core and vtk. RigidForge only writes USD files and does not run inside Isaac Sim, so Isaac's own Python (3.12 for 6.x, 3.11 for 5.x) does not constrain this window.
+Intersection: **3.12 – 3.14**. Recommend developing on 3.13 and testing 3.12 and 3.14 in CI. Linux x86_64/aarch64, macOS and Windows wheels exist for cadquery-ocp-novtk, usd-core and vtk. RigidForge only writes USD files and does not run inside Isaac Sim, so Isaac's own Python (3.12 for 6.x, 3.11 for 5.x) does not constrain this window.
 
 ## 5. Final stack
 
@@ -48,7 +48,7 @@ Intersection: **3.12 – 3.14**. Recommend developing on 3.13 and testing 3.12 a
 |---|---|---|
 | GUI | PySide6 6.12 (LGPL) | Set `QT_API=pyside6` before importing pyvistaqt / qtpy, which otherwise defaults to PyQt5. Do not install other Qt bindings in the same environment. **Target platform is Wayland only (Ubuntu 26.04, no X11/XWayland).** Use Qt's bundled Wayland plugin (`QT_QPA_PLATFORM=wayland`), and do not depend on xcb libraries. Confirm the PyPI `vtk` wheel renders, picks and scales correctly through pyvistaqt's Qt-owned OpenGL context on Wayland **(verify)**; fallbacks are EGL/OSMesa or conda-forge builds. |
 | Viewport | pyvista + pyvistaqt (`QtInteractor`) over VTK 9.7 | MIT / BSD. Drop to raw VTK only if pyvista's picking is limiting. |
-| B-Rep / STEP | `cadquery-ocp` directly | Depend on OCP, not the full `cadquery` package. `cadquery.importers.importStep` uses `STEPControl_Reader` and drops colours and assembly metadata. Use `STEPCAFControl_Reader` with name, colour and material modes on an XCAF document to get the assembly tree. `xstep.cascade.unit` verified 2026-11-15 (section 6, spike 1). |
+| B-Rep / STEP | `cadquery-ocp-novtk` directly (Apache-2.0) | Depend on OCP, not the full `cadquery` package. Use the `-novtk` build (decided 2026-11-16): `cadquery-ocp` hard-pins `vtk==9.6.2`, which would put VTK in the headless core and block the viewport's VTK 9.7.2. Both builds provide the same `OCP` module; RigidForge does not use OCP's VTK bridge (`OCP.IVtk`). Checked 2026-11-16: the novtk build reads STEP through XCAF with the unit setting working, and imports alongside `vtk==9.7.2`. Never install both builds in one environment. Type stubs come from `cadquery-ocp-stubs` (Apache-2.0, same publisher and version, dev dependency only). `cadquery.importers.importStep` uses `STEPControl_Reader` and drops colours and assembly metadata. Use `STEPCAFControl_Reader` with name, colour and material modes on an XCAF document to get the assembly tree. `xstep.cascade.unit` verified 2026-11-15 (section 6, spike 1). |
 | Meshes | trimesh 5.2 (+`pycollada` for DAE; `trimesh[easy]` pulls lxml, networkx, manifold3d) | `moment_inertia` is about the CoM at the mesh's density; `moment_inertia_frame()` gives other frames. Results are meaningless unless the mesh is watertight, so check `is_watertight` first. **3MF import is in scope** via trimesh's 3MF loader (needs lxml, in `trimesh[easy]`): a 3MF file is a scene of objects with build-item transforms and components, so import each object as a candidate part and apply the transforms. 3MF declares its own unit (default millimetre), so read the unit from the model and convert to metres at the import boundary **(verify trimesh's handling of the 3MF `unit` attribute against the 3MF spec and a real file)**. Colours and materials are optional; 3MF is mesh-only, with no B-Rep or assembly names beyond object names. |
 | Collision | coacd 1.0 (MIT) | Run in a worker process, not a thread. |
 | Math | numpy, scipy.spatial.transform | |
@@ -75,7 +75,7 @@ Intersection: **3.12 – 3.14**. Recommend developing on 3.13 and testing 3.12 a
 
 ### Spike findings (2026-11-15)
 
-Run with cadquery-ocp 8.0.1.1.0, trimesh 5.2.1, mujoco 4.0.1, yourdfpy 0.0.60 on Python 3.13, against `tests/data/hexapod-leg`.
+Run with cadquery-ocp 8.0.1.1.0 (since replaced by cadquery-ocp-novtk 8.0.1.1.0, the same OCP build without the VTK pin), trimesh 5.2.1, mujoco 4.0.1, yourdfpy 0.0.60 on Python 3.13, against `tests/data/hexapod-leg`.
 
 1. **STEP units.** `xstep.cascade.unit` is empty until the STEP controller is initialised. `Interface_Static.SetCVal_s` called before that returns `False` and is ignored silently, and the file then reads in mm. Call `STEPControl_Controller.Init_s()`, then set `"M"`, check the return value, and assert the result (for example by bounding box) in each worker process, because the setting is process-global. Volumes scale exactly (4475.23 mm³ to 4.47523e-6 m³). `STEPCAFControl_Reader` keeps names, colours, nested sub-assemblies and instance references (the XL330 body: 10 products, 4 screw instances, 2 connector sub-assemblies).
 2. **OCP 8 API differences.** Label sequences are `OCP.collections.Sequence_TDF_Label` (no `TDF_LabelSequence`). `TopoDS.Face` has no `_s` suffix. `Bnd_Box.Get()` is unbound; use `CornerMin`/`CornerMax`. `BRepBndLib.Add_s` is loose on curved geometry (1.5 mm over on a 33 mm frame); use `AddOptimal_s` for change reports.

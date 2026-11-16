@@ -151,7 +151,7 @@ Isaac Sim version, xacro import semantics, re-import matching and change-report 
 A Briefcase-built Linux package installs and runs on a clean Ubuntu 26.04 Wayland machine, opens a sample project, and exports all four formats.
 
 ## Tasks
-1. Packaging spike: build a minimal Briefcase app bundling PySide6, VTK, cadquery-ocp and usd-core. Check that the Wayland plugin, the OpenGL context and USD `plugInfo.json` resources work from the bundle.
+1. Packaging spike: build a minimal Briefcase app bundling PySide6, VTK, cadquery-ocp-novtk and usd-core. Check that the Wayland plugin, the OpenGL context and USD `plugInfo.json` resources work from the bundle.
 2. Briefcase config in `pyproject.toml`; build and run scripts. Record the exact commands in CLAUDE.md.
 3. Fix bundling gaps found in the spike (data files, plugin paths, licence notices for LGPL PySide6 and TOST usd-core).
 4. Clean-machine test: fresh Ubuntu 26.04 VM or container, install the package, run an end-to-end export.

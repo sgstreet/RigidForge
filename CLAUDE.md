@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-RigidForge is a desktop GUI for building robot models from CAD (STEP) and meshes and exporting them to URDF, MJCF, SDF and USD. **No code exists yet.** The repo holds only the design document `doc/rigid-forge-software-stack.md`, which is the authoritative source for stack choices, versions, architecture and persistence format. Read the relevant section before implementing anything, and update the doc in the same change when a decision changes. The copies of this doc in the claude.ai Project are not authoritative; this repo copy is.
+RigidForge is a desktop GUI for building robot models from CAD (STEP) and meshes and exporting them to URDF, MJCF, SDF and USD. Implementation has started on milestone M1 (see `doc/milestone-progress.md`). The design document `doc/rigid-forge-software-stack.md`, which is the authoritative source for stack choices, versions, architecture and persistence format. Read the relevant section before implementing anything, and update the doc in the same change when a decision changes. The copies of this doc in the claude.ai Project are not authoritative; this repo copy is.
 
 Licence: MPL-2.0.
 
@@ -27,7 +27,7 @@ Verified on 2026-11-15 (see the spike findings in design doc section 6): the OCC
 
 - Python **3.12–3.14**, developed on 3.13. Take dependency pins from design doc sections 4 and 5, and re-check PyPI before adding or bumping a package.
 - PySide6 only: use `Signal`/`Slot`, never `pyqtSignal`. Set `QT_API=pyside6` before importing pyvistaqt/qtpy, and never install a second Qt binding.
-- Depend on `cadquery-ocp` (OCP) directly, not `cadquery`. Read STEP with `STEPCAFControl_Reader` on an XCAF document so the assembly tree, names and colours survive.
+- Depend on `cadquery-ocp-novtk` (OCP without the VTK pin) directly, not `cadquery` or `cadquery-ocp`, which pins `vtk==9.6.2`. Read STEP with `STEPCAFControl_Reader` on an XCAF document so the assembly tree, names and colours survive.
 - Each export format is **generated directly from the internal model**. Never derive one format from another. `gz sdf -k` is an optional validator only. The PyPI `sdformat` package is unrelated and must not be used.
 - The model is a **tree plus optional loop-closure constraints**, not a DAG. Validate single root, no cycles, unique names.
 - **Units:** convert geometry to SI (m, kg) at the import boundary, then compute mass properties on the scaled geometry. Never rescale inertia tensors afterwards.
@@ -71,13 +71,18 @@ Template: Done = (one testable sentence) / Open before starting / Tasks (`->` de
 
 ## Setup and commands
 
-Planned tooling is uv + `pyproject.toml` with a lockfile. First tasks when starting implementation:
+uv + `pyproject.toml` + `uv.lock`, src layout (`src/rigidforge/`). Python 3.13 from `.python-version`. `uv` is in `~/.local/bin`.
 
-1. Create `.python-version` (3.13), `pyproject.toml` and the lockfile; run `uv sync`.
-2. Create `.gitignore` covering `cache/`, `workspace.json`, `.venv/` and Python build artefacts. None exists yet.
-3. Fill in the real build, lint, type-check and test commands in this section.
+```bash
+uv sync                       # install runtime + dev dependencies
+uv run ruff check             # lint (includes the headless banned-import rule)
+uv run ruff format --check    # format check (uv run ruff format to fix)
+uv run pyright                # type check (strict on core/ and exporters/)
+uv run pytest                 # tests; gui/gazebo/isaac tests skip when unavailable
+uv run pytest tests/test_scaffold.py::test_ocp_available_without_vtk_pin   # one test
+```
 
-There are no build, lint or test commands yet.
+Dev dependencies include `cadquery-ocp-stubs` (same version as the OCP build) so pyright can see OCP's compiled symbols. Environment markers auto-skip in `tests/conftest.py`: `gui` needs PySide6, `gazebo` needs `gz` on PATH, `isaac` needs `ISAAC_PATH` or an importable `isaacsim`.
 
 ## Testing
 
@@ -92,7 +97,7 @@ A headless run cannot confirm viewport or GUI behaviour: picking, joint snapping
 
 ## Dependencies and licences
 
-The project is MPL-2.0 and the stack mixes LGPL (PySide6), MIT, BSD and TOST (usd-core) licences. Check licence compatibility before adding a dependency, and record it in the design doc if it is not already there.
+The project is MPL-2.0 and the stack mixes LGPL (PySide6), MIT, BSD, Apache-2.0 (cadquery-ocp-novtk, mujoco) and TOST (usd-core) licences. Check licence compatibility before adding a dependency, and record it in the design doc if it is not already there.
 
 ## Code style
 

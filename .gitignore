@@ -1,0 +1,21 @@
+# Project directories: derived data and per-user state (design doc section 7)
+cache/
+workspace.json
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+htmlcov/
+
+# Local outputs
+out/
