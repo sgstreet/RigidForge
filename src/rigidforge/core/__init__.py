@@ -29,6 +29,7 @@ from rigidforge.core.model import (
     SnapHint,
     SourceKind,
 )
+from rigidforge.core.validation import Issue, IssueCode, Severity, ValidationReport, validate
 
 __all__ = [
     "IDENTITY_QUAT",
@@ -37,6 +38,8 @@ __all__ = [
     "Extensions",
     "InertiaTensor",
     "InertialOverride",
+    "Issue",
+    "IssueCode",
     "Joint",
     "JointDynamics",
     "JointLimits",
@@ -55,9 +58,12 @@ __all__ = [
     "Quat",
     "RobotModel",
     "SdfExtension",
+    "Severity",
     "SnapHint",
     "SourceKind",
     "UrdfExtension",
     "UsdExtension",
+    "ValidationReport",
     "Vec3",
+    "validate",
 ]
