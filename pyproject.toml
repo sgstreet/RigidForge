@@ -27,6 +27,7 @@ dev = [
     "hypothesis>=6.170",
     "yourdfpy>=0.0.60",
     "cadquery-ocp-stubs>=8.0.1,<8.1",
+    "types-lxml>=2026.2.16",
 ]
 
 [build-system]
