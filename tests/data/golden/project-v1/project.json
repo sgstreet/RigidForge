@@ -1,0 +1,193 @@
+{
+  "extensions": {
+    "isaac": {
+      "solver": {
+        "iterations": 50
+      }
+    },
+    "mjcf": null,
+    "sdf": null,
+    "urdf": null,
+    "usd": null
+  },
+  "joints": [
+    {
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "child": "00000000-0000-0000-0000-000000000002",
+      "dynamics": null,
+      "extensions": {
+        "mjcf": {
+          "position_actuator": {
+            "ctrlrange": null,
+            "forcerange": null,
+            "kp": 5.0,
+            "kv": null
+          }
+        },
+        "sdf": null,
+        "urdf": null,
+        "usd": null
+      },
+      "id": "00000000-0000-0000-0000-000000000014",
+      "limits": {
+        "effort": 0.6,
+        "lower": -1.5,
+        "upper": 1.5,
+        "velocity": 8.0
+      },
+      "name": "shoulder",
+      "origin": {
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "xyz": [
+          0.0,
+          0.0,
+          0.1
+        ]
+      },
+      "parent": "00000000-0000-0000-0000-000000000001",
+      "snap_hint": null,
+      "type": "revolute"
+    }
+  ],
+  "links": [
+    {
+      "extensions": {
+        "mjcf": null,
+        "sdf": null,
+        "urdf": null,
+        "usd": null
+      },
+      "id": "00000000-0000-0000-0000-000000000001",
+      "inertial_override": null,
+      "name": "base"
+    },
+    {
+      "extensions": {
+        "mjcf": null,
+        "sdf": null,
+        "urdf": null,
+        "usd": null
+      },
+      "id": "00000000-0000-0000-0000-000000000002",
+      "inertial_override": {
+        "com": [
+          -0.007,
+          0.0,
+          0.0
+        ],
+        "inertia": {
+          "ixx": 1.2e-06,
+          "ixy": 0.0,
+          "ixz": 0.0,
+          "iyy": 2.3e-06,
+          "iyz": 0.0,
+          "izz": 2.1e-06
+        },
+        "mass": 0.018,
+        "orientation": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "source": "datasheet"
+      },
+      "name": "arm"
+    }
+  ],
+  "loop_constraints": [],
+  "name": "golden",
+  "parts": [
+    {
+      "id": "00000000-0000-0000-0000-00000000000a",
+      "inertial_override": null,
+      "link": "00000000-0000-0000-0000-000000000001",
+      "mass": {
+        "density": 1270.0,
+        "kind": "density"
+      },
+      "material": null,
+      "mirror": null,
+      "name": "frame",
+      "placement": {
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "xyz": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "source": {
+        "assembly_path": [
+          "frame"
+        ],
+        "asset": "frame-0123456789ab.step",
+        "kind": "step",
+        "original_path": "/tmp/frame.step",
+        "scale_to_si": 0.001,
+        "sha256": "0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab0123"
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-00000000000b",
+      "inertial_override": null,
+      "link": "00000000-0000-0000-0000-000000000002",
+      "mass": {
+        "kind": "measured_mass",
+        "mass": 0.012
+      },
+      "material": null,
+      "mirror": {
+        "normal": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "point": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "name": "frame-mirror",
+      "placement": {
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "xyz": [
+          0.0,
+          0.0,
+          0.05
+        ]
+      },
+      "source": {
+        "assembly_path": [
+          "frame"
+        ],
+        "asset": "frame-0123456789ab.step",
+        "kind": "step",
+        "original_path": "/tmp/frame.step",
+        "scale_to_si": 0.001,
+        "sha256": "0123456789ab0123456789ab0123456789ab0123456789ab0123456789ab0123"
+      }
+    }
+  ],
+  "schema_version": 1
+}

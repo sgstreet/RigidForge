@@ -46,7 +46,7 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 | 6 | STEP importer | DONE (commit "M1 task 6: STEP importer") |
 | 7 | B-Rep mass properties | DONE (commit "M1 task 7: B-Rep mass properties") |
 | 8 | Mesh importer (STL, OBJ, DAE, 3MF) | DONE (commit "M1 task 8: mesh importer") |
-| 9 | Persistence | TODO |
+| 9 | Persistence | DONE (commit "M1 task 9: persistence") |
 | 10 | URDF exporter | TODO |
 | 11 | MJCF exporter | TODO |
 | 12 | CLI | TODO |
@@ -76,3 +76,4 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 - 2026-11-16: task 6 (STEP importer) done: `rigidforge.importers.step` (XCAF tree to shared products and placed leaves in metres, declared-unit and document-unit checks, `scale_to_si` override applied to the B-Rep, candidate parts) and `rigidforge.core.transforms`; tested on the synthetic fixtures (mm and m) and the hexapod coxa frame and XL330 assembly. All checks pass (149 passed, 1 skipped).
 - 2026-11-16: task 7 (B-Rep mass properties) done: `rigidforge.physics.brep` (adaptive GProp, Eps 1e-12, closed shells only; rejects surface models and reversed solids) and `rigidforge.physics.mass` (unit-density results, density and override paths with provenance, link merge, geometry cache key); `StepImport.leaf_at`. Finding: default GProp integration is 2e-6 to 1e-5 off on the hexapod frames, recorded in design doc section 7. Measured mass raises until task 17. All checks pass (177 passed, 1 skipped).
 - 2026-11-16: task 8 (mesh importer) done: `rigidforge.importers.mesh` (STL, OBJ, DAE, 3MF to metres, one candidate part per object, composed placements, non-rigid transforms baked, welded closed-mesh check) and `rigidforge.physics.mesh` (exact tetrahedron mass properties); synthetic 3MF/STL/OBJ/DAE box fixtures with analytic checks; real-3MF spike recorded in design doc section 6, item 8; `pycollada` added. All checks pass (194 passed, 1 skipped).
+- 2026-11-16: task 9 (persistence) done: `rigidforge.core.project` (canonical atomic `project.json` with rotating backup, migration chain, read-only for newer schemas, content-hashed asset copy and checks), golden fixture `tests/data/golden/project-v1`, hypothesis save/load test, byte-identical resave. All checks pass (223 passed, 1 skipped).
