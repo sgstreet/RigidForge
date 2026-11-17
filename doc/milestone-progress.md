@@ -53,7 +53,7 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 | 13 | Round-trip, determinism and layering tests | DONE (commit "M1 task 13: round-trip, determinism and layering tests") |
 | 14 | Design doc update from spikes | DONE (commit "M1 task 14: design doc update from spikes") |
 | 15 | Instancing and mirror import | DONE (commit "M1 task 15: instancing and mirror import") |
-| 16 | Servo assembly | TODO |
+| 16 | Servo assembly | DONE (commit "M1 task 16: servo assembly") |
 | 17 | Measured-mass calibration | TODO |
 | 18 | Servo inertia override | TODO |
 | 19 | Leg assembly script | TODO (needs: joint limits and CAD pose angles, measured link masses, XL330 inertia and CoM source) |
@@ -83,3 +83,4 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 - 2026-11-16: task 13 done: `tests/test_layering.py` (fresh-interpreter import of all headless packages, pipeline and CLI with PySide6/VTK/pyvista/PyQt blocked and a leak check; AST backstop; no `io` subpackage) and `tests/test_roundtrip.py` (in-memory vs reloaded exports, save/load/save byte stability, repeated and location-independent exports, nested STEP and STL inputs). All checks pass (280 passed, 1 skipped).
 - 2026-11-16: task 14 done: design doc section 6 gains spike item 9 (leg pair placement and horn seating); section 7 gains an exporters, CLI and layering note (tasks 10 to 13). Doc-only change; checks pass. Next: task 15 (instancing and mirror import).
 - 2026-11-16: task 15 done: `rigidforge.core.instancing` (`rigid_copy`, `mirrored_copy`) and `rigidforge.physics.mirror` (B-Rep via `gp_Trsf.SetMirror`, mesh with reversed winding, reflection matrix); `compute_link_masses` now handles mirrored parts. Tests: reflected CoM and R I Rᵀ on the hexapod frames for three planes, valid mirrored B-Rep, outward-wound meshes, instances and mirrors through the pipeline. All checks pass (300 passed, 1 skipped). Next: task 16 (servo assembly).
+- 2026-11-16: task 16 done: `rigidforge.core.instancing.instantiate_assembly` places one imported assembly (the XL330, 16 leaves, one stored file) in a link as rigid copies with composed placements and an optional default density; link merging reuses the parallel-axis `combine`. Tests compare link mass, CoM and inertia against a direct reference, with two servos in one link. Densities for the servo are placeholders until tasks 17 and 18. All checks pass (303 passed, 1 skipped). Next: task 17 (measured-mass calibration).
