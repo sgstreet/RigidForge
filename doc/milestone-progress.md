@@ -96,3 +96,4 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 - 2026-11-17: still waiting for an answer (task 19 questions); no work done.
 - 2026-11-17: still waiting for an answer (task 19 questions); no work done.
 - 2026-11-17: still waiting for an answer (task 19 open items); no work done.
+- 2026-11-17: still waiting for an answer (task 19 questions); no work done.
