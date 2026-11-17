@@ -29,8 +29,8 @@ servo has the manufacturer's mass, CoM and inertia tensor for the XL330-M288 (RO
 moment of inertia", reference only, Feb 2023); that 18 g includes the drive horn (user,
 2026-11-17) but not the idle horn, the idle cap or the idle horn screw, which are modelled as
 separate parts with placeholder densities (IDLE_HORN_DENSITY, IDLE_CAP_DENSITY) until weighed.
-The shaft is a hollow carbon-fibre tube, 1.15 g per 44.5 mm (user), modelled as a tube with
-an inner radius inferred from that mass (SHAFT_INNER_RADIUS).
+The shaft is a hollow carbon-fibre tube, 1.15 g per 44.5 mm (user); its STEP model has the
+true bore, so it uses the geometry with a measured mass (effective density about 1490 kg/m³).
 """
 
 from __future__ import annotations
@@ -55,6 +55,8 @@ from rigidforge.core.model import (
     JointType,
     Link,
     Massless,
+    MassSource,
+    MeasuredMass,
     Part,
     RobotModel,
 )
@@ -71,7 +73,6 @@ __all__ = [
     "build_leg",
     "joint_names",
     "servo_override",
-    "shaft_override",
 ]
 
 DATA_DIR = Path(__file__).resolve().parents[3] / "tests" / "data" / "hexapod-leg"
@@ -83,12 +84,8 @@ IDLE_HORN_DENSITY = 1200.0
 """kg/m³: engineering plastic, a placeholder for the idle horn until it is weighed."""
 IDLE_CAP_DENSITY = 7850.0
 """kg/m³: steel, a placeholder for the idle cap and screw until they are weighed."""
-SHAFT_LENGTH = 0.044
-SHAFT_OUTER_RADIUS = 3.76 * MM
 SHAFT_MASS = 1.15e-3 * 44.0 / 44.5
 """kg: carbon-fibre tube, 1.15 g per 44.5 mm, scaled to the 44 mm modelled length."""
-SHAFT_INNER_RADIUS = 3.0 * MM
-"""m: inferred, not measured. 1.6 g/cm³ carbon fibre at this mass gives a 7.5 mm by 6 mm tube."""
 
 HORN_OFFSET = 13.05 * MM
 """Horn file origin to servo centre along the servo axis: outer face 14.5 mm, file face 1.45 mm."""
@@ -173,19 +170,6 @@ def servo_override() -> InertialOverride:
             iyz=float(i[1, 2]),
         ),
         source="ROBOTIS XL330/XC330 moment of inertia table (XL330-M288), reference only",
-    )
-
-
-def shaft_override() -> InertialOverride:
-    """The carbon-fibre tube as a mass, CoM and tensor in the shaft file frame (axis z, 0 to L)."""
-    m, ro, ri, length = SHAFT_MASS, SHAFT_OUTER_RADIUS, SHAFT_INNER_RADIUS, SHAFT_LENGTH
-    axial = 0.5 * m * (ro**2 + ri**2)
-    transverse = m / 12.0 * (3.0 * (ro**2 + ri**2) + length**2)
-    return InertialOverride(
-        mass=m,
-        com=(0.0, 0.0, length / 2.0),
-        inertia=InertiaTensor(ixx=transverse, iyy=transverse, izz=axial),
-        source="user: carbon-fibre tube 1.15 g per 44.5 mm; inner radius inferred",
     )
 
 
@@ -275,14 +259,11 @@ def build_leg(project: Path, data_dir: Path = DATA_DIR) -> LegBuild:
         link: str,
         matrix: NDArray[np.float64],
         density: float | None,
-        override: InertialOverride | None = None,
+        mass: MassSource | None = None,
     ) -> None:
         (cand,) = cands(stem)
-        update: dict[str, object] = (
-            {"inertial_override": override}
-            if override is not None
-            else {"mass": Density(density=density if density is not None else 0.0)}
-        )
+        chosen = mass if mass is not None else Density(density=density or 0.0)
+        update: dict[str, object] = {"mass": chosen}
         part = rigid_copy(
             cand, name=name, placement=in_link(link, matrix), link=links[link].id
         ).model_copy(update=update)
@@ -312,7 +293,7 @@ def build_leg(project: Path, data_dir: Path = DATA_DIR) -> LegBuild:
         "tibia",
         tibia_origin @ _t(x=SHAFT_X) @ _ry(math.pi / 2),
         None,
-        override=shaft_override(),
+        mass=MeasuredMass(mass=SHAFT_MASS),
     )
 
     def joint(

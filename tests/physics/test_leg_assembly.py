@@ -19,7 +19,7 @@ from OCP.gp import gp_Trsf
 from OCP.GProp import GProp_GProps
 from yourdfpy import URDF
 
-from rigidforge.core.model import Massless
+from rigidforge.core.model import Massless, MeasuredMass
 from rigidforge.core.project import asset_path, load_project
 from rigidforge.importers.step import read_step
 from rigidforge.physics.brep import brep_unit_mass_properties
@@ -99,7 +99,7 @@ def test_leg_model_structure(leg: LegBuild) -> None:
     assert len(m.parts) == 3 * 19 + 7
     # the shared sources: one stored file per distinct CAD file
     assert len({p.source.asset for p in m.parts}) == 8
-    assert sum(p.inertial_override is not None for p in m.parts) == 4  # 3 servos + shaft
+    assert sum(p.inertial_override is not None for p in m.parts) == 3  # the servos
 
 
 def _volume(stem: str) -> float:
@@ -277,13 +277,14 @@ def test_home_pose_tip_and_masses_in_mjcf(leg: LegBuild, tmp_path: Path) -> None
     np.testing.assert_allclose(tip[:3], (166.0 * MM, 0.0, 0.0), atol=1e-12)
 
 
-def test_shaft_is_a_hollow_tube_not_a_solid_rod(leg: LegBuild) -> None:
+def test_shaft_uses_the_hollow_geometry_with_the_measured_mass(leg: LegBuild) -> None:
     shaft = next(p for p in leg.model.parts if p.name == "tibia_shaft")
-    assert shaft.inertial_override is not None and shaft.mass is None
-    assert shaft.inertial_override.mass == pytest.approx(1.15e-3 * 44.0 / 44.5)
-    # a tube of this mass turns more slowly to spin than the same mass as a solid rod
-    solid_axial = 0.5 * SHAFT_MASS * (3.76 * MM) ** 2
-    assert shaft.inertial_override.inertia.izz > solid_axial
-    # wall check: at 1.6 g/cm³ the inferred bore gives the same mass
-    ro, ri, length = 3.76 * MM, 3.0 * MM, 0.044
-    assert 1600.0 * math.pi * (ro**2 - ri**2) * length == pytest.approx(SHAFT_MASS, rel=0.05)
+    assert shaft.inertial_override is None
+    assert isinstance(shaft.mass, MeasuredMass)
+    assert shaft.mass.mass == pytest.approx(1.15e-3 * 44.0 / 44.5)
+    # the STEP file is a tube (about 764 mm³), not a 1954 mm³ solid rod
+    volume = _volume("tiba-shaft")
+    assert volume == pytest.approx(763.5e-9, rel=1e-3)
+    assert volume < 0.5 * math.pi * (3.76 * MM) ** 2 * 0.044
+    props = compute_link_masses(leg.model, leg.project)[leg.links["tibia"]]
+    assert props.mass > SHAFT_MASS
