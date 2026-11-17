@@ -91,7 +91,16 @@ class MeasuredMass(_Model):
     mass: float
 
 
-type MassSource = Annotated[Density | MeasuredMass, Field(discriminator="kind")]
+class Massless(_Model):
+    """No mass of its own: geometry for display or collision only.
+
+    Used for the other parts of an assembly whose mass properties come from one override.
+    """
+
+    kind: Literal["massless"] = "massless"
+
+
+type MassSource = Annotated[Density | MeasuredMass | Massless, Field(discriminator="kind")]
 
 
 class InertialOverride(_Model):

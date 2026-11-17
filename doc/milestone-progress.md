@@ -55,7 +55,7 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 | 15 | Instancing and mirror import | DONE (commit "M1 task 15: instancing and mirror import") |
 | 16 | Servo assembly | DONE (commit "M1 task 16: servo assembly") |
 | 17 | Measured-mass calibration | DONE (commit "M1 task 17: measured-mass calibration") |
-| 18 | Servo inertia override | TODO |
+| 18 | Servo inertia override | DONE (commit "M1 task 18: servo inertia override") |
 | 19 | Leg assembly script | TODO (needs: joint limits and CAD pose angles, measured link masses, XL330 inertia and CoM source) |
 
 ## GUI checks for the user
@@ -85,3 +85,4 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 - 2026-11-16: task 15 done: `rigidforge.core.instancing` (`rigid_copy`, `mirrored_copy`) and `rigidforge.physics.mirror` (B-Rep via `gp_Trsf.SetMirror`, mesh with reversed winding, reflection matrix); `compute_link_masses` now handles mirrored parts. Tests: reflected CoM and R I Rᵀ on the hexapod frames for three planes, valid mirrored B-Rep, outward-wound meshes, instances and mirrors through the pipeline. All checks pass (300 passed, 1 skipped). Next: task 16 (servo assembly).
 - 2026-11-16: task 16 done: `rigidforge.core.instancing.instantiate_assembly` places one imported assembly (the XL330, 16 leaves, one stored file) in a link as rigid copies with composed placements and an optional default density; link merging reuses the parallel-axis `combine`. Tests compare link mass, CoM and inertia against a direct reference, with two servos in one link. Densities for the servo are placeholders until tasks 17 and 18. All checks pass (303 passed, 1 skipped). Next: task 17 (measured-mass calibration).
 - 2026-11-16: task 17 done: `part_mass_properties` handles `MeasuredMass` via an effective density (measured / volume), with provenance `measured_mass`; tests against the analytic box and the equivalent density. All checks pass. Next: task 18 (servo inertia override).
+- 2026-11-16: task 18 done: `instantiate_assembly(override=, override_on=, com_bounds=)` accepts a manufacturer mass/CoM/tensor in the assembly root frame, validates it (positive mass, SPD, triangle inequality, CoM inside geometry bounds to catch frame/unit mistakes), stores it on one part in that part's frame and marks the rest `Massless` (new mass source; skipped by link merging and the pipeline). Tests: link mass, CoM and rotated tensor against the datasheet values, named carrier, validation errors. All checks pass (308 passed, 1 skipped). Next: task 19 (leg assembly script), which needs user input on joint limits, CAD pose angles, measured link masses and XL330 inertia source, so the next run should ask.
