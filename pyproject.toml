@@ -19,6 +19,9 @@ dependencies = [
     "pycollada>=0.9,<0.10",
 ]
 
+[project.scripts]
+rforge = "rigidforge.cli:main"
+
 [dependency-groups]
 dev = [
     "ruff>=0.17.5",
