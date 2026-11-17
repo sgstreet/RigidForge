@@ -19,3 +19,7 @@ htmlcov/
 
 # Local outputs
 out/
+
+# Project backups and temp files
+project.json.bak
+*.rforge/.*.tmp
