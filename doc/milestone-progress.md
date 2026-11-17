@@ -8,15 +8,24 @@ State file for the `/milestone-step` loop (`.claude/skills/milestone-step/SKILL.
 
 ## Pending question
 
-2026-11-17: Task 19 (leg assembly script) has unresolved "Open before task 19" items in `doc/milestones.md`. I need these to build and export the leg; I will not guess them:
+Task 19 is done and every M1 task is DONE. Before the milestone close-out, please confirm these assumptions I made in the leg (or correct them):
+1. The XL330's 18 g includes its horn, so horns and the idle cap carry no mass (the drive horn's rotating mass therefore sits in the parent link).
+2. The tibia shaft is solid PETG (1270 kg/m³); only the frames use 25% infill.
+3. The datasheet tensor is about the CoM, and its frame has its origin on the horn's outer face (read from the PDF drawing).
+4. Positive joint angle is the servo's +z (right-hand rule): coxa +z, femur and tibia +y, so positive femur and tibia move the tip down.
+Then: should the loop run the M1 close-out (check the "Done =" definition end to end, update docs) and merge `m1-core` to `main` and start M2?
+Recommended: yes to all four, then close-out, but merge and tagging are yours to do.
+Answer:
+
+## Answered questions
+
+- 2026-11-17: Task 19 (leg assembly script) has unresolved "Open before task 19" items in `doc/milestones.md`. I need these to build and export the leg; I will not guess them:
 1. Servo-to-frame attachment: by mating faces (horn face flush with frame flange, as verified) or by bolt holes? Recommended: faces, with the bolt pattern only as a placement check.
 2. Joint limits (rad) for coxa yaw, femur pitch, tibia pitch, and the joint angles the CAD files are posed at (so the zero pose is defined). Also effort and velocity limits (XL330 datasheet values OK?).
 3. Measured masses for the coxa, femur and tibia links (g), or may I use PETG 25% infill placeholder density and flag them as unmeasured?
 4. XL330 mass, CoM and inertia source (datasheet mass ~18 g; the datasheet has no tensor). Recommended: use mass 18 g with CoM at the geometry-derived centre and the uniform-density tensor from the servo STEP, marked as an estimate.
 Answer:
-
-## Answered questions
-
+    Answer (user, in chat, 2026-11-17): 1. Mate the faces; use the bolt pattern as reference. 2. Limits: coxa +-90 deg, femur +-90 deg, tibia -90..+150 deg; home pose is 0 deg for all joints; datasheet effort and velocity are fine. 3. Use PETG 25% infill placeholder density for now; user will measure link masses later. 4. User supplied `XL330,XC330 Moment of Inertia.pdf` (ROBOTIS, reference only): the servo is the XL330-M288: 18.0 g, CoM (-0.29100243, -9.2403727, -13.121748) mm, tensor (g*mm^2) Ixx 2555.5250, Iyy 1271.1372, Izz 2271.2629, Ixy -20.247808, Ixz -11.076849, Iyz -229.79973, in the PDF's servo frame (X right, Y up the horn side view, Z toward the horn; origin on the horn axis).
 - 2026-11-16: Task 1 (scaffold): `cadquery-ocp` 8.0.1.1.0, the package CLAUDE.md and design doc section 5 name, hard-pins `vtk==9.6.2`. Two problems follow. M1's done definition says CI runs with no PySide6 or VTK installed, which is impossible with this package. And M2 plans VTK 9.7.2 for the viewport, which this pin blocks.
     PyPI also has `cadquery-ocp-novtk` 8.0.1.1.0 (same Apache-2.0 licence and `OCP` module, depends only on `cadquery-ocp-proxy`). Checked 2026-11-16 on Python 3.13: it reads `tests/data/hexapod-leg/coxa-frame.step` through `STEPCAFControl_Reader` with `xstep.cascade.unit = M` set after `Init_s()`, installs no VTK, and imports cleanly next to `vtk==9.7.2` in the same environment. RigidForge does not use OCP's VTK bridge (`OCP.IVtk`), because the viewport tessellates per face itself.
     Should the project depend on `cadquery-ocp-novtk` instead of `cadquery-ocp`? If yes, the loop updates design doc section 5, CLAUDE.md and the licence note, then finishes and commits the scaffold. The scaffold is written but uncommitted (pyproject.toml, .python-version, .gitignore, `src/rigidforge/` with core, importers, physics, exporters).
@@ -61,7 +70,7 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 | 16 | Servo assembly | DONE (commit "M1 task 16: servo assembly") |
 | 17 | Measured-mass calibration | DONE (commit "M1 task 17: measured-mass calibration") |
 | 18 | Servo inertia override | DONE (commit "M1 task 18: servo inertia override") |
-| 19 | Leg assembly script | TODO (needs: joint limits and CAD pose angles, measured link masses, XL330 inertia and CoM source) |
+| 19 | Leg assembly script | DONE (commit "M1 task 19: leg assembly") |
 
 ## GUI checks for the user
 
@@ -97,3 +106,4 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 - 2026-11-17: still waiting for an answer (task 19 questions); no work done.
 - 2026-11-17: still waiting for an answer (task 19 open items); no work done.
 - 2026-11-17: still waiting for an answer (task 19 questions); no work done.
+- 2026-11-17: answer applied (limits, face mating, PETG 25%, XL330-M288 table). Task 19 done: `rigidforge.testing.hexapod_leg.build_leg` (4 links, 3 revolute joints with limits, datasheet effort/velocity, MJCF position actuators, three servos with the manufacturer override) and `tests/physics/test_leg_assembly.py` (model structure, link masses vs geometry, servo tensor mapping, reload-identical exports, pairwise Boolean overlap = only the shaft press fit, flange-horn gaps < 1e-6 m, URDF/MJCF FK vs independent FK at 50 random poses). Verified the XL330-M288 spec on emanual.robotis.com. All checks pass (316 passed, 1 skipped). Bolt-pattern alignment is not checked automatically (placement is verified by overlap and gap instead). Paused for the assumptions above and the close-out decision.
