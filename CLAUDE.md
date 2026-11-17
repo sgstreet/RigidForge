@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-RigidForge is a desktop GUI for building robot models from CAD (STEP) and meshes and exporting them to URDF, MJCF, SDF and USD. Implementation has started on milestone M1 (see `doc/milestone-progress.md`). The design document `doc/rigid-forge-software-stack.md`, which is the authoritative source for stack choices, versions, architecture and persistence format. Read the relevant section before implementing anything, and update the doc in the same change when a decision changes. The copies of this doc in the claude.ai Project are not authoritative; this repo copy is.
+RigidForge is a desktop GUI for building robot models from CAD (STEP) and meshes and exporting them to URDF, MJCF, SDF and USD. Milestone M1 (headless core, STEP to URDF and MJCF, CLI, hexapod leg) is complete on branch `m1-core`, pending merge; M2 (GUI) is next. See `doc/milestone-progress.md`. The design document `doc/rigid-forge-software-stack.md`, which is the authoritative source for stack choices, versions, architecture and persistence format. Read the relevant section before implementing anything, and update the doc in the same change when a decision changes. The copies of this doc in the claude.ai Project are not authoritative; this repo copy is.
 
 Licence: MPL-2.0.
 
