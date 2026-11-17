@@ -32,7 +32,7 @@ Spikes (findings in design doc section 6, "Spike findings"):
 | Spike: URDF vs MJCF semantics | DONE (2026-11-15) |
 | Spike: mirror correctness | DONE (2026-11-15) |
 | Spike: leg pair placement and horn seating | DONE (2026-11-16) |
-| Spike: real 3MF file (part of task 8) | TODO |
+| Spike: real 3MF file (part of task 8) | DONE (2026-11-16) |
 
 Tasks (numbers and dependencies as in `doc/milestones.md`):
 
@@ -45,7 +45,7 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 | 5 | Synthetic fixture generator | DONE (commit "M1 task 5: synthetic STEP fixtures") |
 | 6 | STEP importer | DONE (commit "M1 task 6: STEP importer") |
 | 7 | B-Rep mass properties | DONE (commit "M1 task 7: B-Rep mass properties") |
-| 8 | Mesh importer (STL, OBJ, DAE, 3MF) | TODO |
+| 8 | Mesh importer (STL, OBJ, DAE, 3MF) | DONE (commit "M1 task 8: mesh importer") |
 | 9 | Persistence | TODO |
 | 10 | URDF exporter | TODO |
 | 11 | MJCF exporter | TODO |
@@ -75,3 +75,4 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 - 2026-11-16: task 5 (synthetic fixtures) done: `rigidforge.testing.step_fixtures` builds XCAF assemblies from analytic primitives (names, colours, nested sub-assembly, a part instanced twice) and writes STEP in mm or m, with the expected placements, volumes and bboxes; read-back tests through `STEPCAFControl_Reader`. Finding: OCCT STEP output is not byte-reproducible (recorded in design doc section 6, item 7). All checks pass (115 passed, 1 skipped).
 - 2026-11-16: task 6 (STEP importer) done: `rigidforge.importers.step` (XCAF tree to shared products and placed leaves in metres, declared-unit and document-unit checks, `scale_to_si` override applied to the B-Rep, candidate parts) and `rigidforge.core.transforms`; tested on the synthetic fixtures (mm and m) and the hexapod coxa frame and XL330 assembly. All checks pass (149 passed, 1 skipped).
 - 2026-11-16: task 7 (B-Rep mass properties) done: `rigidforge.physics.brep` (adaptive GProp, Eps 1e-12, closed shells only; rejects surface models and reversed solids) and `rigidforge.physics.mass` (unit-density results, density and override paths with provenance, link merge, geometry cache key); `StepImport.leaf_at`. Finding: default GProp integration is 2e-6 to 1e-5 off on the hexapod frames, recorded in design doc section 7. Measured mass raises until task 17. All checks pass (177 passed, 1 skipped).
+- 2026-11-16: task 8 (mesh importer) done: `rigidforge.importers.mesh` (STL, OBJ, DAE, 3MF to metres, one candidate part per object, composed placements, non-rigid transforms baked, welded closed-mesh check) and `rigidforge.physics.mesh` (exact tetrahedron mass properties); synthetic 3MF/STL/OBJ/DAE box fixtures with analytic checks; real-3MF spike recorded in design doc section 6, item 8; `pycollada` added. All checks pass (194 passed, 1 skipped).
