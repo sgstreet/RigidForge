@@ -4,11 +4,16 @@ State file for the `/milestone-step` loop (`.claude/skills/milestone-step/SKILL.
 
 - **Milestone:** M1 (headless core, STEP to URDF + MJCF)
 - **Branch:** `m1-core`
-- **Status:** READY
+- **Status:** BLOCKED
 
 ## Pending question
 
-(none)
+2026-11-17: Task 19 (leg assembly script) has unresolved "Open before task 19" items in `doc/milestones.md`. I need these to build and export the leg; I will not guess them:
+1. Servo-to-frame attachment: by mating faces (horn face flush with frame flange, as verified) or by bolt holes? Recommended: faces, with the bolt pattern only as a placement check.
+2. Joint limits (rad) for coxa yaw, femur pitch, tibia pitch, and the joint angles the CAD files are posed at (so the zero pose is defined). Also effort and velocity limits (XL330 datasheet values OK?).
+3. Measured masses for the coxa, femur and tibia links (g), or may I use PETG 25% infill placeholder density and flag them as unmeasured?
+4. XL330 mass, CoM and inertia source (datasheet mass ~18 g; the datasheet has no tensor). Recommended: use mass 18 g with CoM at the geometry-derived centre and the uniform-density tensor from the servo STEP, marked as an estimate.
+Answer:
 
 ## Answered questions
 
@@ -86,3 +91,4 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 - 2026-11-16: task 16 done: `rigidforge.core.instancing.instantiate_assembly` places one imported assembly (the XL330, 16 leaves, one stored file) in a link as rigid copies with composed placements and an optional default density; link merging reuses the parallel-axis `combine`. Tests compare link mass, CoM and inertia against a direct reference, with two servos in one link. Densities for the servo are placeholders until tasks 17 and 18. All checks pass (303 passed, 1 skipped). Next: task 17 (measured-mass calibration).
 - 2026-11-16: task 17 done: `part_mass_properties` handles `MeasuredMass` via an effective density (measured / volume), with provenance `measured_mass`; tests against the analytic box and the equivalent density. All checks pass. Next: task 18 (servo inertia override).
 - 2026-11-16: task 18 done: `instantiate_assembly(override=, override_on=, com_bounds=)` accepts a manufacturer mass/CoM/tensor in the assembly root frame, validates it (positive mass, SPD, triangle inequality, CoM inside geometry bounds to catch frame/unit mistakes), stores it on one part in that part's frame and marks the rest `Massless` (new mass source; skipped by link merging and the pipeline). Tests: link mass, CoM and rotated tensor against the datasheet values, named carrier, validation errors. All checks pass (308 passed, 1 skipped). Next: task 19 (leg assembly script), which needs user input on joint limits, CAD pose angles, measured link masses and XL330 inertia source, so the next run should ask.
+- 2026-11-17: no task started. Task 19 is blocked on the user inputs listed under Pending question; Status set to BLOCKED. Working tree clean.
