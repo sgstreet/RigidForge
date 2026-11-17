@@ -8,9 +8,8 @@ State file for the `/milestone-step` loop (`.claude/skills/milestone-step/SKILL.
 
 ## Pending question
 
-All M1 tasks are DONE. Should the loop run the M1 close-out (check the "Done =" definition end to end, update the design doc and CLAUDE.md) so you can then merge `m1-core` to `main` and tag? Merging and tagging stay with you.
-Open placeholders (not blockers): idle horn and idle cap densities (plastic 1200, steel 7850 kg/m³), shaft bore inferred at 3.0 mm inner radius, link masses (PETG 25%) until you weigh them.
-Recommended: yes.
+M1 close-out is done (see run log). Should the loop start M2 (GUI)? That needs you to merge `m1-core` to `main` and create the `m2-gui` branch first, and M2 tasks are untestable by Claude headless (manual GUI checks by you). Open items for M2: none recorded besides the placeholders listed under M1 notes.
+Recommended: merge and tag `m1` yourself, then answer yes.
 Answer:
 
 ## Answered questions
@@ -105,3 +104,4 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 - 2026-11-17: still waiting for an answer (task 19 questions); no work done.
 - 2026-11-17: answer applied (limits, face mating, PETG 25%, XL330-M288 table). Task 19 done: `rigidforge.testing.hexapod_leg.build_leg` (4 links, 3 revolute joints with limits, datasheet effort/velocity, MJCF position actuators, three servos with the manufacturer override) and `tests/physics/test_leg_assembly.py` (model structure, link masses vs geometry, servo tensor mapping, reload-identical exports, pairwise Boolean overlap = only the shaft press fit, flange-horn gaps < 1e-6 m, URDF/MJCF FK vs independent FK at 50 random poses). Verified the XL330-M288 spec on emanual.robotis.com. All checks pass (316 passed, 1 skipped). Bolt-pattern alignment is not checked automatically (placement is verified by overlap and gap instead). Paused for the assumptions above and the close-out decision.
 - 2026-11-17: leg assumptions answered and applied (idle horn/cap massed, hollow carbon shaft override); all checks pass. Paused for the close-out go-ahead.
+- 2026-11-17: M1 close-out. "Done =" checked clause by clause: CLI build of a generated 2-part STEP arm with a revolute joint (tests/cli), SI mass/CoM/inertia against analytic values (tests/cli, tests/physics), validation, project save/load, URDF + MJCF written; MJCF compiles in MuJoCo, URDF loads in yourdfpy, FK agrees; reloaded project exports byte-identical (tests/test_roundtrip.py, tests/cli); headless with PySide6/VTK/pyvista blocked (tests/test_layering.py). ruff, format, pyright and pytest pass (317 passed, 1 skipped). Beyond the definition: mirror/instancing, mesh and 3MF input, servo override, measured mass, and the hexapod leg. Known gaps carried forward: no visual/collision mesh files in exports yet (B-Rep tessellation), placeholder densities (idle horn, idle cap), shaft bore inferred, link masses unweighed. CLAUDE.md project state updated. Not merged or tagged.
