@@ -13,7 +13,7 @@ attribute order. Features URDF cannot express (loop constraints) are reported as
 
 import math
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from uuid import UUID
 
 import numpy as np
@@ -24,6 +24,7 @@ from rigidforge.core.geometry import Pose
 from rigidforge.core.model import Joint, JointType, Link, RobotModel
 from rigidforge.core.transforms import rotation_from_quat
 from rigidforge.core.validation import validate
+from rigidforge.exporters.common import MeshRef, format_number
 from rigidforge.physics.inertia import MassProperties
 
 __all__ = ["MeshRef", "UrdfExport", "UrdfExportError", "export_urdf", "rpy_from_rotation"]
@@ -31,19 +32,6 @@ __all__ = ["MeshRef", "UrdfExport", "UrdfExportError", "export_urdf", "rpy_from_
 
 class UrdfExportError(ValueError):
     """The model cannot be written as URDF."""
-
-
-@dataclass(frozen=True, slots=True)
-class MeshRef:
-    """A mesh file for a link's visual or collision geometry, in metres.
-
-    ``uri`` is written as given (for example ``meshes/coxa.stl`` or ``package://...``).
-    ``origin`` places the mesh file's frame in the link frame.
-    """
-
-    uri: str
-    origin: Pose = field(default_factory=Pose)
-    rgba: tuple[float, float, float, float] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,9 +43,10 @@ class UrdfExport:
 
 
 def _num(x: float) -> str:
-    if not math.isfinite(x):
-        raise UrdfExportError(f"non-finite number {x!r}")
-    return repr(0.0 if x == 0.0 else float(x))
+    try:
+        return format_number(x)
+    except ValueError as exc:
+        raise UrdfExportError(str(exc)) from exc
 
 
 def _vec(v: Sequence[float]) -> str:
