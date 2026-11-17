@@ -49,7 +49,7 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 | 9 | Persistence | DONE (commit "M1 task 9: persistence") |
 | 10 | URDF exporter | DONE (commit "M1 task 10: URDF exporter") |
 | 11 | MJCF exporter | DONE (commit "M1 task 11: MJCF exporter") |
-| 12 | CLI | TODO |
+| 12 | CLI | DONE (commit "M1 task 12: CLI") |
 | 13 | Round-trip, determinism and layering tests | TODO |
 | 14 | Design doc update from spikes | TODO |
 | 15 | Instancing and mirror import | TODO |
@@ -79,3 +79,4 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 - 2026-11-16: task 9 (persistence) done: `rigidforge.core.project` (canonical atomic `project.json` with rotating backup, migration chain, read-only for newer schemas, content-hashed asset copy and checks), golden fixture `tests/data/golden/project-v1`, hypothesis save/load test, byte-identical resave. All checks pass (223 passed, 1 skipped).
 - 2026-11-16: task 10 (URDF exporter) done: `rigidforge.exporters.urdf.export_urdf(model, masses, visuals, collisions)` writes deterministic URDF with lxml (validates first; rpy with gimbal-lock handling; requires effort and velocity on revolute and prismatic joints; loop constraints dropped with a warning); tested against analytic box inertia, URDF inertia order and yourdfpy FK at random poses. `types-lxml` (Apache-2.0) added as a dev dependency for pyright strict. All checks pass (237 passed, 1 skipped).
 - 2026-11-16: task 11 (MJCF exporter) done: `rigidforge.exporters.mjcf.export_mjcf` (bodies from the joint tree, `fullinertia` in MJCF order, hinge/slide joints with range, damping, friction and effort limits, position actuators from `extensions.mjcf`, loop constraints as site-based connect/weld, mesh assets with visual group 2 and collision group 3); shared `MeshRef` and number formatting moved to `exporters/common.py`. Tested by compiling in MuJoCo (masses, principal moments, full tensor, joints, actuators, meshes, loops) and FK against the URDF export at 50 random poses. All checks pass (246 passed, 1 skipped).
+- 2026-11-16: task 12 (CLI) done: `rforge build|export|validate` (`rigidforge.cli`) over `rigidforge.pipeline` (JSON build spec with links, joints in the import frame, densities and MJCF position actuators; default is one link per leaf joined by fixed joints from the first; masses recomputed from the project's own assets). Tested on the synthetic arm (analytic masses, MuJoCo compile, yourdfpy FK, export from a reloaded project byte-identical), a mesh input and bad specs. Not done here: visual/collision mesh files in the exports (the exporters accept `MeshRef`s; B-Rep tessellation is not written yet), and mirrored parts (task 15). All checks pass (266 passed, 1 skipped).
