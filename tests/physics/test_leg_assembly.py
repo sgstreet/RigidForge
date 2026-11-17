@@ -28,9 +28,11 @@ from rigidforge.testing.hexapod_leg import (
     DATA_DIR,
     EFFORT,
     FRAME_DENSITY,
+    IDLE_CAP_DENSITY,
+    IDLE_HORN_DENSITY,
     LIMITS,
     SERVO_MASS,
-    SHAFT_DENSITY,
+    SHAFT_MASS,
     LegBuild,
     build_leg,
     joint_names,
@@ -97,7 +99,7 @@ def test_leg_model_structure(leg: LegBuild) -> None:
     assert len(m.parts) == 3 * 19 + 7
     # the shared sources: one stored file per distinct CAD file
     assert len({p.source.asset for p in m.parts}) == 8
-    assert sum(p.inertial_override is not None for p in m.parts) == 3
+    assert sum(p.inertial_override is not None for p in m.parts) == 4  # 3 servos + shaft
 
 
 def _volume(stem: str) -> float:
@@ -109,18 +111,25 @@ def _volume(stem: str) -> float:
 def test_link_masses_match_geometry_and_datasheet(leg: LegBuild) -> None:
     masses = compute_link_masses(leg.model, leg.project)
     rho = FRAME_DENSITY
+    idle = (
+        _volume("xl330-idle-horn") * IDLE_HORN_DENSITY
+        + _volume("xl330-idle-cal") * IDLE_CAP_DENSITY
+    )
+    # a servo's idle horn and cap turn with the child link; the 18 g (with drive horn) stays put
     expect = {
         "base": SERVO_MASS,
-        "coxa": SERVO_MASS + 2 * _volume("coxa-frame") * rho,
-        "femur": SERVO_MASS + 2 * _volume("femur-frame") * rho,
-        "tibia": 2 * _volume("tibia-frame") * rho + _volume("tiba-shaft") * SHAFT_DENSITY,
+        "coxa": SERVO_MASS + 2 * _volume("coxa-frame") * rho + idle,
+        "femur": SERVO_MASS + 2 * _volume("femur-frame") * rho + idle,
+        "tibia": 2 * _volume("tibia-frame") * rho + idle + SHAFT_MASS,
     }
     for name, mass in expect.items():
         assert masses[leg.links[name]].mass == pytest.approx(mass, rel=1e-9), name
-    # horns and caps carry no mass of their own (the 18 g covers them)
-    assert all(
-        isinstance(p.mass, Massless) for p in leg.model.parts if "horn" in p.name or "cap" in p.name
-    )
+    # only the drive horn is inside the servo's 18 g; the idle horn and cap have their own mass
+    for p in leg.model.parts:
+        if p.name.endswith("drive_horn"):
+            assert isinstance(p.mass, Massless)
+        elif p.name.endswith(("idle_horn", "idle_cap")):
+            assert not isinstance(p.mass, Massless) and p.mass is not None
 
 
 def test_base_link_is_the_datasheet_servo(leg: LegBuild) -> None:
@@ -266,3 +275,15 @@ def test_home_pose_tip_and_masses_in_mjcf(leg: LegBuild, tmp_path: Path) -> None
     np.testing.assert_allclose(d.xpos[tibia], (91.0 * MM, 0.0, 0.0), atol=1e-12)
     tip = leg.link_world["tibia"] @ np.array([75.0 * MM, 0.0, 0.0, 1.0])
     np.testing.assert_allclose(tip[:3], (166.0 * MM, 0.0, 0.0), atol=1e-12)
+
+
+def test_shaft_is_a_hollow_tube_not_a_solid_rod(leg: LegBuild) -> None:
+    shaft = next(p for p in leg.model.parts if p.name == "tibia_shaft")
+    assert shaft.inertial_override is not None and shaft.mass is None
+    assert shaft.inertial_override.mass == pytest.approx(1.15e-3 * 44.0 / 44.5)
+    # a tube of this mass turns more slowly to spin than the same mass as a solid rod
+    solid_axial = 0.5 * SHAFT_MASS * (3.76 * MM) ** 2
+    assert shaft.inertial_override.inertia.izz > solid_axial
+    # wall check: at 1.6 g/cm³ the inferred bore gives the same mass
+    ro, ri, length = 3.76 * MM, 3.0 * MM, 0.044
+    assert 1600.0 * math.pi * (ro**2 - ri**2) * length == pytest.approx(SHAFT_MASS, rel=0.05)
