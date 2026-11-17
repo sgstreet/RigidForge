@@ -16,6 +16,7 @@ dependencies = [
     "trimesh>=5.2,<6",
     "lxml>=6.1,<7",
     "mujoco>=4.0.1,<5",
+    "pycollada>=0.9,<0.10",
 ]
 
 [dependency-groups]
