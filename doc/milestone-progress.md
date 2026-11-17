@@ -94,3 +94,4 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 - 2026-11-17: no task started. Task 19 is blocked on the user inputs listed under Pending question; Status set to BLOCKED. Working tree clean.
 - 2026-11-17: still waiting for an answer (task 19 questions); no work done.
 - 2026-11-17: still waiting for an answer (task 19 questions); no work done.
+- 2026-11-17: still waiting for an answer (task 19 questions); no work done.
