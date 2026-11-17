@@ -37,6 +37,7 @@ from rigidforge.core.model import (
     JointLimits,
     JointType,
     Link,
+    Massless,
     Part,
     RobotModel,
     SourceKind,
@@ -333,6 +334,8 @@ def compute_link_masses(model: RobotModel, project: Path) -> dict[UUID, MassProp
     try:
         for part in model.parts:
             if part.link is None:
+                continue
+            if isinstance(part.mass, Massless) and part.inertial_override is None:
                 continue
             unit: UnitMassProperties | None = None
             if part.inertial_override is None:

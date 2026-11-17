@@ -36,6 +36,7 @@ import numpy.typing as npt
 from rigidforge.core.model import (
     Density,
     InertialOverride,
+    Massless,
     MeasuredMass,
     MirrorPlane,
     Part,
@@ -227,6 +228,8 @@ def part_mass_properties(part: Part, unit: UnitMassProperties | None) -> PartMas
             props = _checked(unit.at_density(density), what)
             prov = MassProvenance(MassSourceKind.MEASURED_MASS, unit.method, density, unit.volume)
             return PartMassProperties(part.id, props, prov)
+        case Massless():
+            raise MassPropertiesError(f"{what}: massless parts have no mass properties")
 
 
 def link_mass_properties(
@@ -248,7 +251,11 @@ def link_mass_properties(
         )
         return LinkMassProperties(link.id, props, (), prov)
 
-    members = model.parts_of(link_id)
+    members = [
+        p
+        for p in model.parts_of(link_id)
+        if not (isinstance(p.mass, Massless) and p.inertial_override is None)
+    ]
     if not members:
         raise MassPropertiesError(f"{what}: no parts and no inertial override")
     used: list[PartMassProperties] = []
