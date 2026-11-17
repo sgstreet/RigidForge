@@ -64,6 +64,7 @@ from rigidforge.physics.mass import (
     part_mass_properties,
 )
 from rigidforge.physics.mesh import mesh_unit_mass_properties
+from rigidforge.physics.mirror import MirrorError, mirror_mesh, mirror_shape
 
 __all__ = [
     "DEFAULT_DENSITY",
@@ -166,7 +167,7 @@ def _read_leaves(source: Path, scale_to_si: float | None, asset: str, sha: str) 
             names = [obj.name for obj in mesh.objects]
         else:
             raise BuildError(f"unsupported input format {suffix!r}")
-    except (step_importer.StepImportError, mesh_importer.MeshImportError) as exc:
+    except (step_importer.StepImportError, mesh_importer.MeshImportError, MirrorError) as exc:
         raise BuildError(str(exc)) from exc
     leaves = [_Leaf(n, p) for n, p in zip(names, parts, strict=True)]
     if len({n for n in names}) != len(names):
@@ -324,7 +325,7 @@ def compute_link_masses(model: RobotModel, project: Path) -> dict[UUID, MassProp
     """Mass properties of every link in its own frame, from the project's assets.
 
     Raises :class:`BuildError` for a missing asset, a part that cannot be found in its file,
-    a mirrored part (not supported yet, M1 task 15) or invalid mass properties.
+    or invalid mass properties.
     """
     steps: dict[tuple[str, float], Any] = {}
     meshes: dict[tuple[str, float], Any] = {}
@@ -333,8 +334,6 @@ def compute_link_masses(model: RobotModel, project: Path) -> dict[UUID, MassProp
         for part in model.parts:
             if part.link is None:
                 continue
-            if part.mirror is not None:
-                raise BuildError(f"part {part.name!r}: mirrored parts are not supported yet")
             unit: UnitMassProperties | None = None
             if part.inertial_override is None:
                 unit = _unit_properties(part, project, steps, meshes)
@@ -365,12 +364,18 @@ def _unit_properties(
             if key not in steps:
                 steps[key] = step_importer.read_step(file, scale_to_si=src.scale_to_si)
             leaf = steps[key].leaf_at(src.assembly_path)
-            return brep_unit_mass_properties(steps[key].product_of(leaf).shape, part.name)
+            shape = steps[key].product_of(leaf).shape
+            if part.mirror is not None:
+                shape = mirror_shape(shape, part.mirror)
+            return brep_unit_mass_properties(shape, part.name)
         if key not in meshes:
             meshes[key] = mesh_importer.read_mesh(file, scale_to_si=src.scale_to_si)
         obj = meshes[key].object_named(src.assembly_path[0])
-        return mesh_unit_mass_properties(obj.vertices, obj.faces, part.name)
-    except (step_importer.StepImportError, mesh_importer.MeshImportError) as exc:
+        vertices, faces = obj.vertices, obj.faces
+        if part.mirror is not None:
+            vertices, faces = mirror_mesh(vertices, faces, part.mirror)
+        return mesh_unit_mass_properties(vertices, faces, part.name)
+    except (step_importer.StepImportError, mesh_importer.MeshImportError, MirrorError) as exc:
         raise BuildError(f"part {part.name!r}: {exc}") from exc
     except (KeyError, IndexError) as exc:
         raise BuildError(
