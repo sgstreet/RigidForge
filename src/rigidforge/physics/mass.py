@@ -218,10 +218,15 @@ def part_mass_properties(part: Part, unit: UnitMassProperties | None) -> PartMas
             props = _checked(unit.at_density(density), what)
             prov = MassProvenance(MassSourceKind.DENSITY, unit.method, density, unit.volume)
             return PartMassProperties(part.id, props, prov)
-        case MeasuredMass():
-            raise MassPropertiesError(
-                f"{what}: measured-mass calibration is not implemented yet (M1 task 17)"
-            )
+        case MeasuredMass(mass=measured):
+            if not (np.isfinite(measured) and measured > 0.0):
+                raise MassPropertiesError(f"{what}: measured mass {measured} is not positive")
+            # Effective density that makes the computed mass match; inertia scales with it
+            # at fixed shape and the CoM comes from geometry.
+            density = measured / unit.volume
+            props = _checked(unit.at_density(density), what)
+            prov = MassProvenance(MassSourceKind.MEASURED_MASS, unit.method, density, unit.volume)
+            return PartMassProperties(part.id, props, prov)
 
 
 def link_mass_properties(

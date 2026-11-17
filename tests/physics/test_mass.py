@@ -88,6 +88,34 @@ def test_part_override_replaces_geometry_and_is_rotated() -> None:
     assert result.provenance.density is None and result.provenance.volume is None
 
 
+def test_measured_mass_sets_effective_density() -> None:
+    size = (0.1, 0.08, 0.04)
+    measured = 0.0312
+    part = Part(name="base", source=_source(), mass=MeasuredMass(mass=measured))
+    result = part_mass_properties(part, _unit_box(size))
+    v = size[0] * size[1] * size[2]
+    # Mass matches the scale reading; shape (CoM, inertia) is the analytic box at that mass.
+    assert result.props.mass == pytest.approx(measured, rel=1e-12)
+    assert result.props.allclose(solid_box(measured, size), rtol=1e-12)
+    prov = result.provenance
+    assert prov.source is MassSourceKind.MEASURED_MASS
+    assert prov.density == pytest.approx(measured / v)
+    assert prov.volume == pytest.approx(v)
+
+
+def test_measured_mass_equals_density_at_matching_value() -> None:
+    size = (0.05, 0.05, 0.02)
+    unit = _unit_box(size)
+    v = size[0] * size[1] * size[2]
+    by_density = part_mass_properties(
+        Part(name="a", source=_source(), mass=Density(density=PETG)), unit
+    )
+    by_mass = part_mass_properties(
+        Part(name="a", source=_source(), mass=MeasuredMass(mass=PETG * v)), unit
+    )
+    assert by_mass.props.allclose(by_density.props, rtol=1e-12)
+
+
 @pytest.mark.parametrize(
     ("part", "unit", "message"),
     [
@@ -99,9 +127,9 @@ def test_part_override_replaces_geometry_and_is_rotated() -> None:
             "density",
         ),
         (
-            Part(name="p", source=_source(), mass=MeasuredMass(mass=0.005)),
+            Part(name="p", source=_source(), mass=MeasuredMass(mass=0.0)),
             _unit_box((1, 1, 1)),
-            "task 17",
+            "measured mass",
         ),
         (
             Part(name="p", source=_source(), mass=Density(density=PETG)),
