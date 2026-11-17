@@ -8,17 +8,14 @@ State file for the `/milestone-step` loop (`.claude/skills/milestone-step/SKILL.
 
 ## Pending question
 
-Task 19 is done and every M1 task is DONE. Before the milestone close-out, please confirm these assumptions I made in the leg (or correct them):
-1. The XL330's 18 g includes its horn, so horns and the idle cap carry no mass (the drive horn's rotating mass therefore sits in the parent link).
-2. The tibia shaft is solid PETG (1270 kg/m³); only the frames use 25% infill.
-3. The datasheet tensor is about the CoM, and its frame has its origin on the horn's outer face (read from the PDF drawing).
-4. Positive joint angle is the servo's +z (right-hand rule): coxa +z, femur and tibia +y, so positive femur and tibia move the tip down.
-Then: should the loop run the M1 close-out (check the "Done =" definition end to end, update docs) and merge `m1-core` to `main` and start M2?
-Recommended: yes to all four, then close-out, but merge and tagging are yours to do.
+All M1 tasks are DONE. Should the loop run the M1 close-out (check the "Done =" definition end to end, update the design doc and CLAUDE.md) so you can then merge `m1-core` to `main` and tag? Merging and tagging stay with you.
+Open placeholders (not blockers): idle horn and idle cap densities (plastic 1200, steel 7850 kg/m³), shaft bore inferred at 3.0 mm inner radius, link masses (PETG 25%) until you weigh them.
+Recommended: yes.
 Answer:
 
 ## Answered questions
 
+- 2026-11-17: leg assumptions. Answer (user, in chat): the 18 g excludes the idle horn, idle cap and idle horn screw; the shaft is a hollow carbon-fibre tube, 1.15 g per 44.5 mm; tensor about the CoM (believed); positive joint angle = servo +z (yes). Applied: idle horn and cap are massed parts with placeholder densities; shaft is a tube override (1.137 g for 44 mm, inner radius 3.0 mm inferred).
 - 2026-11-17: Task 19 (leg assembly script) has unresolved "Open before task 19" items in `doc/milestones.md`. I need these to build and export the leg; I will not guess them:
 1. Servo-to-frame attachment: by mating faces (horn face flush with frame flange, as verified) or by bolt holes? Recommended: faces, with the bolt pattern only as a placement check.
 2. Joint limits (rad) for coxa yaw, femur pitch, tibia pitch, and the joint angles the CAD files are posed at (so the zero pose is defined). Also effort and velocity limits (XL330 datasheet values OK?).
@@ -107,3 +104,4 @@ Tasks (numbers and dependencies as in `doc/milestones.md`):
 - 2026-11-17: still waiting for an answer (task 19 open items); no work done.
 - 2026-11-17: still waiting for an answer (task 19 questions); no work done.
 - 2026-11-17: answer applied (limits, face mating, PETG 25%, XL330-M288 table). Task 19 done: `rigidforge.testing.hexapod_leg.build_leg` (4 links, 3 revolute joints with limits, datasheet effort/velocity, MJCF position actuators, three servos with the manufacturer override) and `tests/physics/test_leg_assembly.py` (model structure, link masses vs geometry, servo tensor mapping, reload-identical exports, pairwise Boolean overlap = only the shaft press fit, flange-horn gaps < 1e-6 m, URDF/MJCF FK vs independent FK at 50 random poses). Verified the XL330-M288 spec on emanual.robotis.com. All checks pass (316 passed, 1 skipped). Bolt-pattern alignment is not checked automatically (placement is verified by overlap and gap instead). Paused for the assumptions above and the close-out decision.
+- 2026-11-17: leg assumptions answered and applied (idle horn/cap massed, hollow carbon shaft override); all checks pass. Paused for the close-out go-ahead.

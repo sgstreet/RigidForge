@@ -22,12 +22,15 @@ Layout (user-confirmed 2026-11-15 to 2026-11-17, see ``doc/milestones.md``):
 * Each frame pair is one part used twice, the second copy rotated 180 degrees about the frame's
   x axis through the servo centre. Frames mate to the horn faces; the horn bolt pattern (4 bolts
   at 6 mm radius) is the placement reference.
-* Horns and the idle cap rotate with the child link. Their mass is part of the servo's 18 g,
-  so they carry no mass of their own.
+* Horns and the idle cap rotate with the child link.
 
-Masses: the frames are PETG at 25 % infill (placeholder until the links are weighed), the shaft
-is treated as solid PETG (assumption), and each servo has the manufacturer's mass, CoM and
-inertia tensor for the XL330-M288 (ROBOTIS, "The moment of inertia", reference only, Feb 2023).
+Masses: the frames are PETG at 25 % infill (placeholder until the links are weighed). Each
+servo has the manufacturer's mass, CoM and inertia tensor for the XL330-M288 (ROBOTIS, "The
+moment of inertia", reference only, Feb 2023); that 18 g includes the drive horn (user,
+2026-11-17) but not the idle horn, the idle cap or the idle horn screw, which are modelled as
+separate parts with placeholder densities (IDLE_HORN_DENSITY, IDLE_CAP_DENSITY) until weighed.
+The shaft is a hollow carbon-fibre tube, 1.15 g per 44.5 mm (user), modelled as a tube with
+an inner radius inferred from that mass (SHAFT_INNER_RADIUS).
 """
 
 from __future__ import annotations
@@ -68,6 +71,7 @@ __all__ = [
     "build_leg",
     "joint_names",
     "servo_override",
+    "shaft_override",
 ]
 
 DATA_DIR = Path(__file__).resolve().parents[3] / "tests" / "data" / "hexapod-leg"
@@ -75,8 +79,16 @@ DATA_DIR = Path(__file__).resolve().parents[3] / "tests" / "data" / "hexapod-leg
 MM = 1e-3
 FRAME_DENSITY = 0.25 * 1270.0
 """kg/m³: PETG at 25 % infill (placeholder; set from measured link masses later)."""
-SHAFT_DENSITY = 1270.0
-"""kg/m³: solid PETG, an assumption for the tibia shaft."""
+IDLE_HORN_DENSITY = 1200.0
+"""kg/m³: engineering plastic, a placeholder for the idle horn until it is weighed."""
+IDLE_CAP_DENSITY = 7850.0
+"""kg/m³: steel, a placeholder for the idle cap and screw until they are weighed."""
+SHAFT_LENGTH = 0.044
+SHAFT_OUTER_RADIUS = 3.76 * MM
+SHAFT_MASS = 1.15e-3 * 44.0 / 44.5
+"""kg: carbon-fibre tube, 1.15 g per 44.5 mm, scaled to the 44 mm modelled length."""
+SHAFT_INNER_RADIUS = 3.0 * MM
+"""m: inferred, not measured. 1.6 g/cm³ carbon fibre at this mass gives a 7.5 mm by 6 mm tube."""
 
 HORN_OFFSET = 13.05 * MM
 """Horn file origin to servo centre along the servo axis: outer face 14.5 mm, file face 1.45 mm."""
@@ -164,6 +176,19 @@ def servo_override() -> InertialOverride:
     )
 
 
+def shaft_override() -> InertialOverride:
+    """The carbon-fibre tube as a mass, CoM and tensor in the shaft file frame (axis z, 0 to L)."""
+    m, ro, ri, length = SHAFT_MASS, SHAFT_OUTER_RADIUS, SHAFT_INNER_RADIUS, SHAFT_LENGTH
+    axial = 0.5 * m * (ro**2 + ri**2)
+    transverse = m / 12.0 * (3.0 * (ro**2 + ri**2) + length**2)
+    return InertialOverride(
+        mass=m,
+        com=(0.0, 0.0, length / 2.0),
+        inertia=InertiaTensor(ixx=transverse, iyy=transverse, izz=axial),
+        source="user: carbon-fibre tube 1.15 g per 44.5 mm; inner radius inferred",
+    )
+
+
 @dataclass(frozen=True)
 class LegBuild:
     model: RobotModel
@@ -228,10 +253,10 @@ def build_leg(project: Path, data_dir: Path = DATA_DIR) -> LegBuild:
         parts.extend(body)
         for p, leaf in zip(body, stored["xl330-Body"][0].leaves, strict=True):
             world[p.name] = servo @ leaf.transform
-        for stem, label, z in (
-            ("xl330-drive-horn", "drive_horn", HORN_OFFSET),
-            ("xl330-idle-horn", "idle_horn", -HORN_OFFSET),
-            ("xl330-idle-cal", "idle_cap", -HORN_OFFSET),
+        for stem, label, z, mass in (
+            ("xl330-drive-horn", "drive_horn", HORN_OFFSET, Massless()),
+            ("xl330-idle-horn", "idle_horn", -HORN_OFFSET, Density(density=IDLE_HORN_DENSITY)),
+            ("xl330-idle-cal", "idle_cap", -HORN_OFFSET, Density(density=IDLE_CAP_DENSITY)),
         ):
             (cand,) = cands(stem)
             m = servo @ _t(z=z)
@@ -240,17 +265,27 @@ def build_leg(project: Path, data_dir: Path = DATA_DIR) -> LegBuild:
                 name=f"{name}/{label}",
                 placement=in_link(horn_link, m),
                 link=links[horn_link].id,
-            ).model_copy(update={"mass": Massless()})
+            ).model_copy(update={"mass": mass})
             parts.append(horn)
             world[horn.name] = m
 
     def add_one(
-        stem: str, name: str, link: str, matrix: NDArray[np.float64], density: float
+        stem: str,
+        name: str,
+        link: str,
+        matrix: NDArray[np.float64],
+        density: float | None,
+        override: InertialOverride | None = None,
     ) -> None:
         (cand,) = cands(stem)
+        update: dict[str, object] = (
+            {"inertial_override": override}
+            if override is not None
+            else {"mass": Density(density=density if density is not None else 0.0)}
+        )
         part = rigid_copy(
             cand, name=name, placement=in_link(link, matrix), link=links[link].id
-        ).model_copy(update={"mass": Density(density=density)})
+        ).model_copy(update=update)
         parts.append(part)
         world[name] = matrix
 
@@ -276,7 +311,8 @@ def build_leg(project: Path, data_dir: Path = DATA_DIR) -> LegBuild:
         "tibia_shaft",
         "tibia",
         tibia_origin @ _t(x=SHAFT_X) @ _ry(math.pi / 2),
-        SHAFT_DENSITY,
+        None,
+        override=shaft_override(),
     )
 
     def joint(
